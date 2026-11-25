@@ -1,0 +1,49 @@
+You are helping me finish setting up an Unreal Engine 5.8 project for Pixel Streaming. The project is the default Third Person template with the Pixel Streaming plugin already enabled. The goal is to host it on a Windows PC with an NVIDIA RTX 3090 and let other employees on our internal network play it in a browser, ONE USER AT A TIME. It will be used for on-demand presentations of project visualizations.
+
+ENVIRONMENT
+- Project path: <PATH TO .uproject FOLDER>
+- Engine install path: <e.g. C:\Program Files\Epic Games\UE_5.8>
+- Target OS: Windows 64-bit. No Linux.
+- Everything should work over HTTP on the LAN first. I will add HTTPS with a reverse proxy later.
+
+ABOUT ME (please follow this)
+I have a beginner's coding knowledge and an intermediate knowledge of Unreal Blueprints. For every step, briefly explain WHY you are doing it. Comment every script and config change thoroughly. If you add or describe any Blueprint, call out and explain any uncommon nodes.
+
+IMPORTANT: VERIFY, DON'T ASSUME
+Plugin names, console variables, and command-line flags have changed between engine versions. Before changing anything:
+1. Open the .uproject and the engine's Plugins/Media/PixelStreaming* folders (including any PixelStreaming2 plugin). Tell me which plugin(s) UE 5.8 ships and which one is enabled in the project. Recommend which to use. Do not enable both.
+2. Find the Pixel Streaming infrastructure (signalling server and web frontend) bundled under the engine's PixelStreaming Resources/WebServers folder. Report its location and the scripts it provides.
+3. Read the plugin's own source or docs to confirm the exact command-line flags (signalling URL, resolution, encoder, etc.) for THIS version. Use only flags you can find there. If you can't confirm a flag, say so.
+
+TASKS
+1. AUDIT: Report the current state of the .uproject, Config/DefaultEngine.ini, DefaultGame.ini, and DefaultInput.ini as they relate to Pixel Streaming. List what is missing before changing anything.
+
+2. PROJECT CONFIG (comment every change):
+   - Make sure the correct Pixel Streaming plugin is enabled, with no conflicting duplicates.
+   - Set the default map and the game's startup map correctly for packaging.
+   - Configure input so mouse and keyboard work well through the browser. In particular, handle mouse capture and cursor behavior for the third-person template, and explain the tradeoffs.
+   - Configure a fixed windowed resolution of 1920x1080 for streaming.
+   - Turn off anything that interferes with a hosted game: for example, make sure the game keeps running at full performance without focus, and doesn't pause or throttle.
+   - Choose a sensible RHI (DX12 vs DX11) for Pixel Streaming with NVENC on the 3090 on 5.8, and explain the choice.
+
+3. PACKAGING: Create a script (PowerShell or .bat) that builds and packages a Windows Development build using the engine's RunUAT BuildCookRun command line. The output goes to a folder named Packaged inside the project folder. Comment each argument. Then run it only if the engine path is valid and tell me about any errors.
+
+4. LAUNCH SCRIPTS: Create these in a Streaming/ folder, well commented:
+   - Start-Signalling.ps1: starts the bundled signalling server and web frontend. Put the engine WebServers path in a variable at the top.
+   - Start-Game.ps1: starts the packaged game with the confirmed Pixel Streaming flags, 1920x1080, fixed resolution, and rendering off-screen if appropriate.
+   - Start-All.ps1: starts both in the correct order, waits for the signalling server to be ready, and logs output to a Logs/ folder.
+   - Stop-All.ps1: cleanly stops both.
+   The server hostname, ports, and paths should all be variables at the top of the script, not hardcoded.
+
+5. FIREWALL: Write a separate script, Open-Firewall.ps1, that adds the inbound Windows Firewall rules needed (web port, signalling/streamer port, and the UDP range WebRTC needs). Do NOT run it. I will review it and run it as admin myself. Comment what each rule is for and which ones are required for single-user LAN use.
+
+6. DOCUMENTATION: Write Streaming/README.md covering how to package, how to start and stop everything, the URL to open from another machine (use http://<PC-NAME>/), a troubleshooting section (black screen, no input, wrong resolution, no audio, can't connect from another subnet and when a TURN server would be needed), and a list of what is NOT done yet (HTTPS reverse proxy, auth/SSO, startup-on-boot, client branding of the frontend page).
+
+RULES
+- Do not modify gameplay content or Blueprints unless needed; the default template is fine.
+- Don't delete or overwrite existing files without telling me first. Back up any config file before editing it (a .bak copy).
+- Make minimal, explained changes. Show me a diff or summary of everything you changed at the end.
+- If something needs the Unreal Editor GUI that you can't do from the command line, give me the exact menu path and setting value instead.
+- At the end, give me a short checklist of manual test steps to confirm it works from a second computer on the LAN.
+
+Start with step 1 and the verification items. Report what you find before making any changes.
